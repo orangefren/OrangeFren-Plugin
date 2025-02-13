@@ -13,8 +13,19 @@ async function updateProtectedWebsites() {
         throw new Error("Unsupported phishing data version! Please update the plugin!");
     }
 
+    // Copy the previous suppress_warnings field to the new data
+    const previousData = await chrome.storage.local.get("PROTECTED_WEBSITES");
+
     for (let site of updatedData.data) {
+
         site.suppress_warnings = [];
+
+        if (previousData.PROTECTED_WEBSITES) {
+            const previousSite = previousData.PROTECTED_WEBSITES.find((prevSite) => prevSite.name === site.name)
+            if (previousSite && previousSite.suppress_warnings) {
+                site.suppress_warnings = previousSite.suppress_warnings;
+            }
+        }
     }
 
     // Update the local storage with the latest phishing list

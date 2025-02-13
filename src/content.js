@@ -90,11 +90,12 @@ function generatePhishingPatterns(domainConfig) {
 }
 
 function isPhishingUrl(hostname, domainConfig) {
-    // User has dismissed the warning for this domain
-    if (domainConfig.suppress_warnings.includes(hostname) || domainConfig.known_legit.includes(hostname)) return 0;
 
     // remove www. prefix
     const susHost = hostname.toLowerCase().replace(/^www\./, '');
+
+    // User has dismissed the warning for this domain
+    if (domainConfig.suppress_warnings.includes(susHost) || domainConfig.known_legit.includes(susHost)) return 0;
 
     for (const known_scam of domainConfig.known_scams) {
         if (known_scam.includes(susHost)) return 2; // Known phishing domain
@@ -215,7 +216,12 @@ function showWarning(realDomain, phishingScore) {
         Object.assign(alwaysDismissButton.style, warningStyles.dismissButton);
         alwaysDismissButton.addEventListener('click', () => {
             // add to suppress_warnings
-            PROTECTED_WEBSITES.find(site => site.known_legit.includes(realDomain)).suppress_warnings.push(new URL(window.location.href).hostname);
+            let susHost = new URL(window.location.href).hostname;
+            // remove www. prefix
+            susHost = susHost.toLowerCase().replace(/^www\./, '');
+
+            // User has dismissed the warning for this domain
+            PROTECTED_WEBSITES.find(site => site.known_legit.includes(realDomain)).suppress_warnings.push(susHost);
             chrome.storage.local.set({PROTECTED_WEBSITES: PROTECTED_WEBSITES});
 
             overlay.remove();
